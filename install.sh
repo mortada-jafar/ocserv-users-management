@@ -181,29 +181,14 @@ _EOF_
 }
 
 Config_Firewall() {
-    firewalldisactive=$(systemctl is-active firewalld.service)
-    iptablesisactive=$(systemctl is-active iptables.service)
-
-    # Add a firewall permission list
-    if [[ ${firewalldisactive} = 'active' ]]; then
-        echo "Adding firewall ports."
-        firewall-cmd --permanent --add-port=${port}/tcp
-        firewall-cmd --permanent --add-port=${port}/udp
-        echo "Allow firewall to forward."
-        firewall-cmd --permanent --add-masquerade
-        echo "Reload firewall configure."
-        firewall-cmd --reload
-    elif [[ ${iptablesisactive} = 'active' ]]; then
-        iptables -I INPUT -p tcp --dport ${port} -j ACCEPT
-        iptables -I INPUT -p udp --dport ${port} -j ACCEPT
-        iptables -I FORWARD -s ${vpnnetwork} -j ACCEPT
-        iptables -I FORWARD -d ${vpnnetwork} -j ACCEPT
-        iptables -t nat -A POSTROUTING -s ${vpnnetwork} -o ${eth} -j MASQUERADE
-        #iptables -t nat -A POSTROUTING -j MASQUERADE
-        service iptables save
-    else
-        printf "\e[33mWARNING!!! Either firewalld or iptables is NOT Running! \e[0m\n"
-    fi    
+   iptables -I INPUT -p tcp --dport ${port} -j ACCEPT
+   iptables -I INPUT -p udp --dport ${port} -j ACCEPT
+   iptables -I FORWARD -s ${vpnnetwork} -j ACCEPT
+   iptables -I FORWARD -d ${vpnnetwork} -j ACCEPT
+   iptables -t nat -A POSTROUTING -s ${vpnnetwork} -o ${eth} -j MASQUERADE
+   #iptables -t nat -A POSTROUTING -j MASQUERADE
+  # service iptables save
+   
 }
 
 Config_System() {

@@ -138,7 +138,7 @@ _EOF_
     sed -i 's/auth = "pam\[gid-min=1000\]"/#auth = "pam\[gid-min=1000\]"/g'  "${confdir}/ocserv.conf"
     sed -i "s/route = 10.0.0.0\/8/#route = 10.0.0.0\/8/g" "${confdir}/ocserv.conf"
     sed -i "s/route = 172.16.0.0\/12/#route = 172.16.0.0\/12/g" "${confdir}/ocserv.conf"
-    sed -i "s/route = 192.168.0.0\/8/#route = 192.168.0.0\/16/g" "${confdir}/ocserv.conf"
+    sed -i "s/route = 192.168.0.0\/16/#route = 192.168.0.0\/16/g" "${confdir}/ocserv.conf"
     ######################PAMMMMMM
 }
 

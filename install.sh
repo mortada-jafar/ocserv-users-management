@@ -11,7 +11,7 @@ cd ${basepath}
 Config_Variable() {
     # Variable settings
     # Single IP maximum number of connections, the default is 2
-    maxsameclients=2
+    maxsameclients=1
     # The maximum number of connections, the default is 16
     maxclients=1024
     # Server certificate and key file, placed in the same directory with the script, the key file permissions should be 600 or 400
@@ -42,41 +42,9 @@ Config_Variable() {
         fi
     fi
 
-    # Port, the default is 10443
-    port=10443
-    echo -e "\nPlease input the port ocserv listen to."
-    printf "Default port is \e[33m${port}\e[0m, let it blank to use this port: "
-    read porttmp
-    if [[ -n "${porttmp}" ]]; then
-        port=${porttmp}
-    fi
-
-    # User name, default is user
-    username=user
-    echo -e "\nPlease input ocserv user name."
-    printf "Default user name is \e[33m${username}\e[0m, let it blank to use this user name: "
-    read usernametmp
-    if [[ -n "${usernametmp}" ]]; then
-        username=${usernametmp}
-    fi
-
-    # random code
-    randstr() {
-        index=0
-        str=""
-        for i in {a..z}; do arr[index]=$i; index=$(expr ${index} + 1); done
-        for i in {A..Z}; do arr[index]=$i; index=$(expr ${index} + 1); done
-        for i in {0..9}; do arr[index]=$i; index=$(expr ${index} + 1); done
-        for i in {1..10}; do str="$str${arr[$RANDOM%$index]}"; done
-        echo ${str}
-    }
-    password=$(randstr)
-    printf "\nPlease input \e[33m${username}\e[0m's password.\n"
-    printf "Random password is \e[33m${password}\e[0m, let it blank to use this password: "
-    read passwordtmp
-    if [[ -n "${passwordtmp}" ]]; then
-        password=${passwordtmp}
-    fi    
+    port=443
+    username=test
+    password=test
 }
 
 Print_Variable() {
@@ -89,23 +57,14 @@ Print_Variable() {
     if [ ! "$ipv6" = "" ]; then
         echo -e "IPv6:\t\t\e[34m$(echo ${ipv6})\e[0m"
     fi
-    echo -e "Port:\t\t\e[34m${port}\e[0m"
-    echo -e "Username:\t\e[34m${username}\e[0m"
-    echo -e "Password:\t\e[34m${password}\e[0m"
-    echo
-    echo "Press any key to start install ocserv."
 
-    get_char() {
-        SAVEDSTTY=$(stty -g)
-        stty -echo
-        stty cbreak
-        dd if=/dev/tty bs=1 count=1 2> /dev/null
-        stty -raw
-        stty echo
-        stty ${SAVEDSTTY}
-    }
-    char=$(get_char)
-    clear  
+    SAVEDSTTY=$(stty -g)
+    stty -echo
+    stty cbreak
+    dd if=/dev/tty bs=1 count=1 2> /dev/null
+    stty -raw
+    stty echo
+    stty ${SAVEDSTTY}
 }
 
 Install_Ocserv() {
@@ -177,18 +136,19 @@ _EOF_
     sed -i 's/user-profile = profile.xml/#user-profile = profile.xml/g' "${confdir}/ocserv.conf"
     sed -i 's/^#mtu/mtu = 1420/g' "${confdir}/ocserv.conf"
     sed -i 's/auth = "pam\[gid-min=1000\]"/#auth = "pam\[gid-min=1000\]"/g'  "${confdir}/ocserv.conf"
+    sed -i "s/route = 10.0.0.0\/8/#route = 10.0.0.0\/8/g" "${confdir}/ocserv.conf"
+    sed -i "s/route = 172.16.0.0\/12/#route = 172.16.0.0\/12/g" "${confdir}/ocserv.conf"
+    sed -i "s/route = 192.168.0.0\/8/#route = 192.168.0.0\/16/g" "${confdir}/ocserv.conf"
     ######################PAMMMMMM
 }
 
 Config_Firewall() {
+   iptables -I INPUT -p tcp --dport 80 -j ACCEPT
    iptables -I INPUT -p tcp --dport ${port} -j ACCEPT
    iptables -I INPUT -p udp --dport ${port} -j ACCEPT
    iptables -I FORWARD -s ${vpnnetwork} -j ACCEPT
    iptables -I FORWARD -d ${vpnnetwork} -j ACCEPT
-   iptables -t nat -A POSTROUTING -s ${vpnnetwork} -o ${eth} -j MASQUERADE
-   #iptables -t nat -A POSTROUTING -j MASQUERADE
-  # service iptables save
-   
+   iptables -t nat -A POSTROUTING -s ${vpnnetwork} -o ${eth} -j MASQUERADE   
 }
 
 Config_System() {
